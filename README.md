@@ -26,12 +26,16 @@ ps3mc_editor/
 ## Quick start
 
 ```bash
-python -m ps3mc_editor.main --save ps3mc_editor/saves inventory add diamond_sword 64
-python -m ps3mc_editor.main --save ps3mc_editor/saves spawn zombie 0 64 0
-python -m ps3mc_editor.main --save ps3mc_editor/saves spawn_armored_zombie
-python -m ps3mc_editor.main --save ps3mc_editor/saves villager custom_trade dirt diamond
-python -m ps3mc_editor.main --save ps3mc_editor/saves chunk generate 0 0
+python -m ps3mc_editor.main
 ```
 
-Edits are persisted into `world_nbt.json`, chunk binary blobs, and a rebuilt
-`GAMEDATA` summary inside the selected save folder.
+On startup, the editor opens a file picker so you can select any file inside a
+PS3 save folder. If GUI selection is unavailable, it falls back to a path
+prompt in the terminal. Once loaded, use the interactive menu to edit
+inventory, entities, villager trades, and chunks, then save.
+
+You can still provide a path directly:
+
+```bash
+python -m ps3mc_editor.main --save-path ps3mc_editor/saves/WORLDNAME
+```
