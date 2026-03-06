@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+
+# Runtime-generated save artifacts
+ps3mc_editor/saves/WORLDNAME/world_nbt.json
+ps3mc_editor/saves/WORLDNAME/chunk_index.json
+ps3mc_editor/saves/WORLDNAME/chunks/
