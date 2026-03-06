@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -22,21 +25,25 @@ class WorldSelectorWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("PS3 Minecraft World Editor")
-        self.resize(700, 420)
+        self.resize(760, 460)
+        self.setAcceptDrops(True)
+        self.recent_file = Path.home() / ".ps3mc_editor_recent.json"
 
         self.recent_worlds = QListWidget()
         self._build_ui()
+        self._load_recent_worlds()
 
     def _build_ui(self) -> None:
         root = QWidget()
         layout = QVBoxLayout(root)
 
-        layout.addWidget(QLabel("Select a PlayStation 3 Edition world save directory"))
+        layout.addWidget(QLabel("Select or drag-and-drop a PlayStation 3 Edition world save directory."))
         layout.addWidget(self.recent_worlds)
+        self.recent_worlds.itemDoubleClicked.connect(lambda item: self.open_world(Path(item.text())))
 
         buttons = QHBoxLayout()
         open_btn = QPushButton("Open World")
-        open_btn.clicked.connect(self.open_world)
+        open_btn.clicked.connect(lambda: self.open_world())
 
         create_void_btn = QPushButton("Create Void World")
         create_void_btn.clicked.connect(self.create_void_world)
@@ -51,12 +58,41 @@ class WorldSelectorWindow(QMainWindow):
 
         self.setCentralWidget(root)
 
-    def open_world(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, "Select PS3 World Folder")
-        if not folder:
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:  # noqa: N802
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event: QDropEvent) -> None:  # noqa: N802
+        urls = event.mimeData().urls()
+        if not urls:
+            return
+        path = Path(urls[0].toLocalFile())
+        if path.is_dir():
+            self.open_world(path)
+
+    def _load_recent_worlds(self) -> None:
+        if not self.recent_file.exists():
+            return
+        try:
+            worlds = json.loads(self.recent_file.read_text(encoding="utf-8"))
+            for world in worlds:
+                if Path(world).exists():
+                    self.recent_worlds.addItem(world)
+        except (json.JSONDecodeError, OSError):
             return
 
-        world_path = Path(folder)
+    def _save_recent_worlds(self) -> None:
+        paths = [self.recent_worlds.item(i).text() for i in range(self.recent_worlds.count())]
+        self.recent_file.write_text(json.dumps(paths[:10], indent=2), encoding="utf-8")
+
+    def open_world(self, selected: Path | None = None) -> None:
+        world_path = selected
+        if world_path is None:
+            folder = QFileDialog.getExistingDirectory(self, "Select PS3 World Folder")
+            if not folder:
+                return
+            world_path = Path(folder)
+
         world = PS3World(world_path)
         missing = [name for name in ("GAMEDATA", "PARAM.SFO") if not (world_path / name).exists()]
         if missing:
@@ -67,8 +103,19 @@ class WorldSelectorWindow(QMainWindow):
             )
             return
 
-        self.recent_worlds.addItem(str(world_path))
+        world.load()
+        self._remember_world(world_path)
         self._launch_editor(world)
+
+    def _remember_world(self, world_path: Path) -> None:
+        as_str = str(world_path)
+        current = [self.recent_worlds.item(i).text() for i in range(self.recent_worlds.count())]
+        if as_str in current:
+            current.remove(as_str)
+        current.insert(0, as_str)
+        self.recent_worlds.clear()
+        self.recent_worlds.addItems(current[:10])
+        self._save_recent_worlds()
 
     def create_void_world(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Choose New World Directory")
@@ -77,11 +124,15 @@ class WorldSelectorWindow(QMainWindow):
 
         world = PS3World(Path(folder))
         world.create_void_world()
-        self.recent_worlds.addItem(str(world.path))
+        self._remember_world(world.path)
         self._launch_editor(world)
 
     def show_settings(self) -> None:
-        QMessageBox.information(self, "Settings", "Settings will be added in a future update.")
+        QMessageBox.information(
+            self,
+            "Settings",
+            "Settings are minimal for now.\nTip: double-click recent worlds or drag-and-drop folders.",
+        )
 
     def _launch_editor(self, world: PS3World) -> None:
         editor = MainEditorWindow(world)

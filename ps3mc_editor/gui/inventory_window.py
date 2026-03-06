@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QMessageBox,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
@@ -18,7 +19,9 @@ class InventoryWindow(QWidget):
     def __init__(self, world: PS3World) -> None:
         super().__init__()
         self.world = world
+        self.slots: list[QLabel] = []
         self._build_ui()
+        self.refresh_grid()
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -27,18 +30,21 @@ class InventoryWindow(QWidget):
         grid = QGridLayout()
         for i in range(4):
             for j in range(9):
-                slot = QLabel(f"[{i * 9 + j}]")
+                slot = QLabel("[empty]")
                 slot.setStyleSheet("border: 1px solid gray; padding: 6px;")
                 grid.addWidget(slot, i, j)
+                self.slots.append(slot)
         root.addLayout(grid)
 
         controls = QHBoxLayout()
         self.item_selector = QComboBox()
+        self.item_selector.setEditable(True)
         self.item_selector.addItems([
             "diamond",
             "diamond_sword",
             "spawn_egg",
             "enchanted_book",
+            "golden_apple",
         ])
 
         self.count = QSpinBox()
@@ -62,14 +68,37 @@ class InventoryWindow(QWidget):
         controls.addWidget(illegal_btn)
         root.addLayout(controls)
 
+    def refresh_grid(self) -> None:
+        for label, slot in zip(self.slots, self.world.inventory.as_slots(), strict=False):
+            if slot is None:
+                label.setText("[empty]")
+            else:
+                label.setText(f"{slot.item_id}\nx{slot.count}")
+
+    def _current_item(self) -> str:
+        return self.item_selector.currentText().strip()
+
     def add_item(self) -> None:
-        self.world.inventory.add_item(self.item_selector.currentText(), self.count.value())
+        item = self._current_item()
+        if not item:
+            QMessageBox.warning(self, "Inventory", "Item id cannot be empty.")
+            return
+        self.world.inventory.add_item(item, self.count.value())
+        self.refresh_grid()
 
     def remove_item(self) -> None:
-        self.world.inventory.remove_item(self.item_selector.currentText())
+        item = self._current_item()
+        self.world.inventory.remove_item(item)
+        self.refresh_grid()
 
     def edit_item(self) -> None:
-        self.world.inventory.edit_item(self.item_selector.currentText(), self.count.value())
+        item = self._current_item()
+        if not item:
+            return
+        self.world.inventory.edit_item(item, self.count.value())
+        self.refresh_grid()
 
     def spawn_illegal(self) -> None:
-        self.world.inventory.spawn_illegal_item(self.item_selector.currentText())
+        item = self._current_item()
+        self.world.inventory.spawn_illegal_item(item)
+        self.refresh_grid()

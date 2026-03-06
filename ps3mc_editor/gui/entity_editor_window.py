@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QComboBox,
+    QFormLayout,
     QHBoxLayout,
     QListWidget,
+    QMessageBox,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -24,10 +27,23 @@ class EntityEditorWindow(QWidget):
         root.addWidget(self.entities)
         self.refresh_list()
 
-        controls = QHBoxLayout()
+        form = QFormLayout()
         self.mob_selector = QComboBox()
         self.mob_selector.addItems(["Zombie", "Skeleton", "Creeper", "Villager", "Enderman"])
+        self.x = QSpinBox()
+        self.y = QSpinBox()
+        self.z = QSpinBox()
+        for spin in [self.x, self.y, self.z]:
+            spin.setRange(-30000, 30000)
+        self.y.setValue(64)
 
+        form.addRow("Mob", self.mob_selector)
+        form.addRow("X", self.x)
+        form.addRow("Y", self.y)
+        form.addRow("Z", self.z)
+        root.addLayout(form)
+
+        controls = QHBoxLayout()
         spawn_btn = QPushButton("Spawn Mob")
         spawn_btn.clicked.connect(self.spawn_mob)
         delete_btn = QPushButton("Delete Mob")
@@ -45,7 +61,6 @@ class EntityEditorWindow(QWidget):
         invisible_btn.clicked.connect(self.invisible_mob)
 
         for widget in [
-            self.mob_selector,
             spawn_btn,
             delete_btn,
             edit_btn,
@@ -62,34 +77,46 @@ class EntityEditorWindow(QWidget):
         for entity in self.world.entities.list_entities():
             self.entities.addItem(f"{entity['id']} ({entity['x']},{entity['y']},{entity['z']})")
 
+    def _xyz(self) -> tuple[int, int, int]:
+        return self.x.value(), self.y.value(), self.z.value()
+
     def spawn_mob(self) -> None:
-        self.world.entities.spawn(self.mob_selector.currentText())
+        x, y, z = self._xyz()
+        self.world.entities.spawn(self.mob_selector.currentText(), x=x, y=y, z=z)
         self.refresh_list()
 
     def delete_mob(self) -> None:
         row = self.entities.currentRow()
-        if row >= 0:
-            self.world.entities.delete(row)
-            self.refresh_list()
+        if row < 0:
+            QMessageBox.warning(self, "Entity Editor", "Select an entity to delete.")
+            return
+        self.world.entities.delete(row)
+        self.refresh_list()
 
     def edit_mob(self) -> None:
         row = self.entities.currentRow()
-        if row >= 0:
-            self.world.entities.edit(row, {"Health": 40.0})
-            self.refresh_list()
+        if row < 0:
+            QMessageBox.warning(self, "Entity Editor", "Select an entity to edit.")
+            return
+        self.world.entities.edit(row, {"x": self.x.value(), "y": self.y.value(), "z": self.z.value(), "Health": 40.0})
+        self.refresh_list()
 
     def armored_zombie(self) -> None:
-        self.world.entities.spawn_armored_zombie()
+        x, y, z = self._xyz()
+        self.world.entities.spawn_armored_zombie(x=x, y=y, z=z)
         self.refresh_list()
 
     def giant_mob(self) -> None:
-        self.world.entities.spawn_giant_mob()
+        x, y, z = self._xyz()
+        self.world.entities.spawn_giant_mob(self.mob_selector.currentText(), x=x, y=y, z=z)
         self.refresh_list()
 
     def speed_mob(self) -> None:
-        self.world.entities.spawn_speed_mob()
+        x, y, z = self._xyz()
+        self.world.entities.spawn_speed_mob(self.mob_selector.currentText(), x=x, y=y, z=z)
         self.refresh_list()
 
     def invisible_mob(self) -> None:
-        self.world.entities.spawn_invisible_mob()
+        x, y, z = self._xyz()
+        self.world.entities.spawn_invisible_mob(self.mob_selector.currentText(), x=x, y=y, z=z)
         self.refresh_list()

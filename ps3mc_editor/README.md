@@ -1,6 +1,6 @@
 # PS3 Minecraft World Editor (Linux)
 
-A click-based PySide6 desktop tool to open and edit PS3 Minecraft world folders.
+A clickable desktop editor for PS3 Minecraft worlds with world selection, inventory tools, chunk tools, entity spawning at coordinates, villager trade editing, and cheat actions.
 
 ## One-line startup (recommended)
 
@@ -8,21 +8,25 @@ A click-based PySide6 desktop tool to open and edit PS3 Minecraft world folders.
 ./ps3mc_editor/start_editor.sh
 ```
 
-This launcher auto-creates a local virtual environment (`ps3mc_editor/.venv`), installs dependencies, and starts the GUI.
+The launcher creates `ps3mc_editor/.venv`, installs dependencies (`PySide6`, `nbtlib`), then starts the GUI.
 
-## Optional manual startup
+## What works now
 
-```bash
-cd ps3mc_editor
-python3 -m venv .venv
-. .venv/bin/activate
-pip install PySide6 nbtlib
-python main.py
-```
+- Startup world selector with:
+  - Open World
+  - Create Void World
+  - Recent Worlds (persisted)
+  - Drag-and-drop world folder
+- Main editor tabs:
+  - Inventory tab with add/remove/edit/illegal item and a live slot grid
+  - Chunks tab with load/generate/delete/clone/fill tools
+  - Entities tab with spawn/edit/delete plus exact X/Y/Z spawn coordinates
+  - Villagers tab with custom trade creation/removal and custom villager spawn
+  - Cheats tab with OP sword, item cloud, mob army size control, illegal items
+- Save system:
+  - Writes compressed `GAMEDATA`
+  - Writes `world_state.nbt`
 
-## Features
+## Troubleshooting
 
-- World selector with **Open World**, **Create Void World**, **Recent Worlds**, and **Settings**.
-- Tabbed editor for Inventory, Chunks, Entities, Villagers, and Cheats.
-- Save pipeline that writes NBT metadata and compressed `GAMEDATA`.
-- Linux launcher script (`start_editor.sh`) and desktop entry template.
+- If the launcher says no display was detected, run it inside a desktop GUI session (not a headless shell).

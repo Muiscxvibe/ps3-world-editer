@@ -1,6 +1,6 @@
 # ps3-world-editer
 
-This repository includes a Linux-focused **PS3 Minecraft World Editor** prototype at `ps3mc_editor/`.
+PS3 Minecraft World Editor for Linux is available in `ps3mc_editor/`.
 
 ## One-line startup
 
@@ -8,9 +8,9 @@ This repository includes a Linux-focused **PS3 Minecraft World Editor** prototyp
 ./ps3mc_editor/start_editor.sh
 ```
 
-The launcher handles a local virtual environment so it works on distros with externally managed system Python (PEP 668).
+This command sets up a local virtual environment automatically (PEP 668 friendly), installs required dependencies, and starts the GUI.
 
-## Launcher options
+## Included launcher assets
 
 - Shell launcher: `ps3mc_editor/start_editor.sh`
 - Desktop entry template: `ps3mc_editor/ps3mc-editor.desktop`

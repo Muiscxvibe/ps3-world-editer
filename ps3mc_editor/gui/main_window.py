@@ -23,14 +23,20 @@ class MainEditorWindow(QMainWindow):
         self.world = world
 
         self.setWindowTitle(f"PS3 World Editor - {world.path.name}")
-        self.resize(1000, 700)
+        self.resize(1100, 760)
+
+        self.inventory_tab = InventoryWindow(world)
+        self.chunk_tab = ChunkManagerWindow(world)
+        self.entity_tab = EntityEditorWindow(world)
+        self.villager_tab = VillagerEditorWindow(world)
+        self.cheat_tab = CheatPanel(world)
 
         self.tabs = QTabWidget()
-        self.tabs.addTab(InventoryWindow(world), "Inventory")
-        self.tabs.addTab(ChunkManagerWindow(world), "Chunks")
-        self.tabs.addTab(EntityEditorWindow(world), "Entities")
-        self.tabs.addTab(VillagerEditorWindow(world), "Villagers")
-        self.tabs.addTab(CheatPanel(world), "Cheats")
+        self.tabs.addTab(self.inventory_tab, "Inventory")
+        self.tabs.addTab(self.chunk_tab, "Chunks")
+        self.tabs.addTab(self.entity_tab, "Entities")
+        self.tabs.addTab(self.villager_tab, "Villagers")
+        self.tabs.addTab(self.cheat_tab, "Cheats")
 
         self.setCentralWidget(self.tabs)
         self.setStatusBar(QStatusBar())
@@ -39,8 +45,17 @@ class MainEditorWindow(QMainWindow):
         save_toolbar = QToolBar("Save")
         save_btn = QPushButton("Save World")
         save_btn.clicked.connect(self.save_world)
+        refresh_btn = QPushButton("Refresh Tabs")
+        refresh_btn.clicked.connect(self.refresh_views)
         save_toolbar.addWidget(save_btn)
+        save_toolbar.addWidget(refresh_btn)
         self.addToolBar(save_toolbar)
+
+    def refresh_views(self) -> None:
+        self.inventory_tab.refresh_grid()
+        self.entity_tab.refresh_list()
+        self.villager_tab.refresh_list()
+        self.statusBar().showMessage("Views refreshed", 3000)
 
     def save_world(self) -> None:
         self.world.save()
