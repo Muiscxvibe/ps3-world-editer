@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=PS3 Minecraft World Editor
-Exec=python3 /workspace/ps3-world-editer/ps3mc_editor/main.py
+Exec=/bin/bash -lc 'cd /path/to/ps3-world-editer && ./ps3mc_editor/start_editor.sh'
 Type=Application
 Terminal=false
 Categories=Game;Utility;

@@ -1,14 +1,14 @@
 # ps3-world-editer
 
-This repository now includes a Linux-focused **PS3 Minecraft World Editor** prototype at `ps3mc_editor/`.
+This repository includes a Linux-focused **PS3 Minecraft World Editor** prototype at `ps3mc_editor/`.
 
-## Run
+## One-line startup
 
 ```bash
-python3 -m pip install PySide6 nbtlib
-cd ps3mc_editor
-python3 main.py
+./ps3mc_editor/start_editor.sh
 ```
+
+The launcher handles a local virtual environment so it works on distros with externally managed system Python (PEP 668).
 
 ## Launcher options
 
