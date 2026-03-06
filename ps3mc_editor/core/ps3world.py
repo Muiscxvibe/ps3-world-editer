@@ -30,6 +30,8 @@ class CheatService:
 
 
 class PS3World:
+    GAMEDATA_CANDIDATES = ("GAMEDATA", "GAMEDATA.MS", "gamedata", "gamedata.ms")
+
     def __init__(self, path: Path) -> None:
         self.path = path
         self.inventory = InventoryManager()
@@ -37,22 +39,48 @@ class PS3World:
         self.entities = EntityManager()
         self.cheats = CheatService(self)
 
+    def find_gamedata_file(self) -> Path | None:
+        for name in self.GAMEDATA_CANDIDATES:
+            candidate = self.path / name
+            if candidate.exists() and candidate.is_file():
+                return candidate
+        return None
+
+    def is_world_folder(self) -> bool:
+        return self.find_gamedata_file() is not None
+
     def create_void_world(self) -> None:
         self.path.mkdir(parents=True, exist_ok=True)
-        (self.path / "PARAM.SFO").write_text("PS3 World Placeholder\n", encoding="utf-8")
-        (self.path / "PARAM.PFD").write_text("Placeholder\n", encoding="utf-8")
+        if not (self.path / "PARAM.SFO").exists():
+            (self.path / "PARAM.SFO").write_text("PS3 World Placeholder\n", encoding="utf-8")
+        if not (self.path / "PARAM.PFD").exists():
+            (self.path / "PARAM.PFD").write_text("Placeholder\n", encoding="utf-8")
         self.chunks.generate_void_chunk(0, 0)
         self.save()
 
     def load(self) -> None:
-        gamedata = self.path / "GAMEDATA"
-        if not gamedata.exists():
+        gamedata = self.find_gamedata_file()
+        if gamedata is None:
             return
-        raw = zlib.decompress(gamedata.read_bytes())
-        payload = json.loads(raw.decode("utf-8"))
-        self.inventory.load_dict(payload.get("inventory", {}))
-        self.chunks.load_dict(payload.get("chunks", {}))
-        self.entities.load_list(payload.get("entities", []))
+
+        raw_bytes = gamedata.read_bytes()
+        decoded_payload: dict | None = None
+
+        try:
+            raw = zlib.decompress(raw_bytes)
+            decoded_payload = json.loads(raw.decode("utf-8"))
+        except (zlib.error, UnicodeDecodeError, json.JSONDecodeError):
+            try:
+                decoded_payload = json.loads(raw_bytes.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                decoded_payload = None
+
+        if decoded_payload is None:
+            return
+
+        self.inventory.load_dict(decoded_payload.get("inventory", {}))
+        self.chunks.load_dict(decoded_payload.get("chunks", {}))
+        self.entities.load_list(decoded_payload.get("entities", []))
 
     def _write_gamedata(self) -> None:
         payload = {
@@ -62,7 +90,8 @@ class PS3World:
         }
         raw = json.dumps(payload, indent=2).encode("utf-8")
         compressed = zlib.compress(raw)
-        (self.path / "GAMEDATA").write_bytes(compressed)
+        target = self.find_gamedata_file() or (self.path / "GAMEDATA")
+        target.write_bytes(compressed)
 
     def save(self) -> None:
         self.path.mkdir(parents=True, exist_ok=True)

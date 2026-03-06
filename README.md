@@ -14,3 +14,6 @@ This command sets up a local virtual environment automatically (PEP 668 friendly
 
 - Shell launcher: `ps3mc_editor/start_editor.sh`
 - Desktop entry template: `ps3mc_editor/ps3mc-editor.desktop`
+
+
+World detection supports PS3 save folders that contain either `GAMEDATA` or `GAMEDATA.MS` (no hard requirement on `PARAM.SFO`).

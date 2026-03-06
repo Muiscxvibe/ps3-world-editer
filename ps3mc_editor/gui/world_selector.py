@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -94,12 +93,12 @@ class WorldSelectorWindow(QMainWindow):
             world_path = Path(folder)
 
         world = PS3World(world_path)
-        missing = [name for name in ("GAMEDATA", "PARAM.SFO") if not (world_path / name).exists()]
-        if missing:
+        if not world.is_world_folder():
             QMessageBox.warning(
                 self,
                 "Invalid World",
-                f"The selected folder is missing required files: {', '.join(missing)}",
+                "The selected folder is missing a PS3 world data file. Expected one of: "
+                "GAMEDATA or GAMEDATA.MS",
             )
             return
 

@@ -1,6 +1,6 @@
 # PS3 Minecraft World Editor (Linux)
 
-A clickable desktop editor for PS3 Minecraft worlds with world selection, inventory tools, chunk tools, entity spawning at coordinates, villager trade editing, and cheat actions.
+A clickable desktop editor for PS3 Minecraft worlds with world selection, inventory tools, chunk tools, entity spawning at coordinates, villager trade editing, and cheat actions. Supports worlds containing `GAMEDATA` or `GAMEDATA.MS`.
 
 ## One-line startup (recommended)
 
